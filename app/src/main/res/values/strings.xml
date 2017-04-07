@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">DarkBox</string>
+    <string name="view_darkbox">View DarkBox</string>
+    <string name="add_darkbox">Add DarkBox</string>
+</resources>
