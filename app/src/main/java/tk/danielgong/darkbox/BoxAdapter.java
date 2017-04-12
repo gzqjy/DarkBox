@@ -1,41 +1,68 @@
 package tk.danielgong.darkbox;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 import java.util.List;
+import java.util.Map;
+
+import tk.danielgong.darkbox.helper.ItemTouchHelperAdapter;
+import tk.danielgong.darkbox.helper.ItemTouchHelperViewHolder;
+import tk.danielgong.darkbox.helper.OnStartDragListener;
 
 /**
  * Created by gongzhq on 2017/4/11.
  */
 
-public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder> {
+public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder>  implements ItemTouchHelperAdapter {
     private static final String TAG = "box_adapter";
     private List<Box> mBoxList;
+    private final OnStartDragListener mDragStartListener;
     private ListDataSaver mListDataSaver;
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
         View boxView;
         ImageView boxImage;
         TextView boxName;
-        Button removeButton;
+        int backgroundColor = 0;
+        Switch switchButton;
 
         public ViewHolder(View view) {
             super(view);
             boxView = view;
             boxImage = (ImageView) view.findViewById(R.id.box_image);
             boxName = (TextView) view.findViewById(R.id.box_name);
-            removeButton = (Button) view.findViewById(R.id.remove);
+            switchButton = (Switch) view.findViewById(R.id.switch_button);
+        }
+        @Override
+        public void onItemSelected() {
+            ColorDrawable colorDrawable = (ColorDrawable)itemView.getBackground();
+            backgroundColor = colorDrawable.getColor();
+            itemView.setBackgroundColor(Color.LTGRAY);
+        }
+
+        @Override
+        public void onItemClear() {
+            itemView.setBackgroundColor(backgroundColor);
         }
     }
 
-    public BoxAdapter(List<Box> boxList) {
+    public BoxAdapter(List<Box> boxList, OnStartDragListener dragStartListener) {
+        mDragStartListener = dragStartListener;
         mBoxList = boxList;
     }
 
@@ -44,6 +71,28 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder> {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.box_item, parent, false);
         mListDataSaver = new ListDataSaver(view.getContext(), "darkbox");
         final ViewHolder holder = new ViewHolder(view);
+        return holder;
+    }
+
+    @Override
+    public void onBindViewHolder(final ViewHolder holder, int position) {
+        Box box = mBoxList.get(position);
+        holder.boxImage.setImageResource(box.getImageId());
+        holder.boxName.setText(box.getName());
+        holder.boxView.setBackgroundColor(box.getBackground());
+        Log.d(TAG, "onBindViewHolder: " + box.getName());
+
+        // Start a drag whenever the handle view it touched
+        holder.boxView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+                    mDragStartListener.onStartDrag(holder);
+                }
+                return false;
+            }
+        });
+
         holder.boxView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,6 +101,7 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder> {
                 Toast.makeText(v.getContext(), "you clicked view " + box.getName(), Toast.LENGTH_SHORT).show();
             }
         });
+
         holder.boxImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -60,27 +110,41 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder> {
                 Toast.makeText(v.getContext(), "you clicked image " + box.getName(), Toast.LENGTH_SHORT).show();
             }
         });
-        holder.removeButton.setOnClickListener(new View.OnClickListener() {
+
+
+        holder.switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View v) {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 int position = holder.getAdapterPosition();
                 Box box = mBoxList.get(position);
-                Toast.makeText(v.getContext(), "you clicked remove " + box.getName(), Toast.LENGTH_SHORT).show();
-                mBoxList.remove(box);
-                mListDataSaver.setDataList("darkbox_boxs", mBoxList);
-                this.notify();
+                ArrayList<App> ss = box.getApps();
+                for (App s : ss) {
+                    Log.d(TAG, "onCheckedChanged: apps " + s.getName());
+                }
+                Log.d(TAG, "onCheckedChanged: size " + ss.size());
+                if(isChecked) {
+                    Toast.makeText(buttonView.getContext(), "onCheckedChanged " + isChecked + box.getName(), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(buttonView.getContext(), "onCheckedChanged " + isChecked + box.getName(), Toast.LENGTH_SHORT).show();
+                }
             }
         });
-        return holder;
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Box box = mBoxList.get(position);
-        holder.boxImage.setImageResource(box.getImageId());
-        holder.boxName.setText(box.getName());
-        holder.boxView.setBackgroundColor(box.getBackground());
-        Log.d(TAG, "onBindViewHolder: " + box.getName());
+    public void onItemDismiss(int position) {
+        Box box = mBoxList.remove(position);
+        mListDataSaver.removeData(box.getName());
+        mListDataSaver.setDataList("darkbox_boxs", mBoxList);
+        Log.d(TAG, "onItemDismiss: boxlist size " + mBoxList.size());
+        notifyItemRemoved(position);
+    }
+
+    @Override
+    public boolean onItemMove(int fromPosition, int toPosition) {
+        Collections.swap(mBoxList, fromPosition, toPosition);
+        notifyItemMoved(fromPosition, toPosition);
+        return true;
     }
 
     @Override

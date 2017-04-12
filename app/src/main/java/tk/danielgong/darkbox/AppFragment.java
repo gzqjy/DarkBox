@@ -1,6 +1,7 @@
 package tk.danielgong.darkbox;
 
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -15,6 +16,8 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import android.content.SharedPreferences;
+import com.solidfire.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.Map;
  */
 
 public class AppFragment extends Fragment {
+    private ListDataSaver listDataSaver;
+    private List<Box> mDarkboxBoxs;
     private List<App> mAppList = new ArrayList<App>();
     private CheckBox mCheckBox;
     private EditText mEditText;
@@ -44,21 +49,29 @@ public class AppFragment extends Fragment {
         mAdapter = new AppAdapter(mAppList);
         recyclerView.setAdapter(mAdapter);
 
+        listDataSaver = new ListDataSaver(view.getContext(), "darkbox");
+        mDarkboxBoxs = listDataSaver.getDataList("darkbox_boxs", Box.class);
+
+        return view;
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
         mEditText = (EditText) view.findViewById(R.id.apps_title);
 
         mAddButton = (Button) view.findViewById(R.id.apps_darkbox);
         mAddButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<App> darkAppList = new ArrayList<App>();
-                ListDataSaver listDataSaver = new ListDataSaver(getActivity().getApplicationContext(), "darkbox");
-                List<Box> darkbox_boxs = listDataSaver.getDataList("darkbox_boxs", Box.class);
+                ArrayList<App> darkAppList = new ArrayList<App>();
+
                 String title = mEditText.getText().toString();
                 if (title.length() == 0 || title.equals("darkbox_boxs")) {
                     return;
                 }
-                for (Box darkbox_box : darkbox_boxs) {
-                    if(darkbox_box.getName().equals(title)) {
+                for (Box mDarkboxBox : mDarkboxBoxs) {
+                    if (mDarkboxBox.getName().equals(title)) {
                         return;
                     }
                 }
@@ -69,13 +82,13 @@ public class AppFragment extends Fragment {
                     }
                 }
                 int colorId = R.color.grey;
-                if (darkbox_boxs.size() % 2 != 0) {
+                if (mDarkboxBoxs.size() % 2 != 0) {
                     colorId = R.color.white;
                 }
-                Box box = new Box(title, R.drawable.apple_pic, colorId);
-                darkbox_boxs.add(box);
-                listDataSaver.setDataList(title, darkAppList);
-                listDataSaver.setDataList("darkbox_boxs", darkbox_boxs);
+                Box box = new Box(title, R.drawable.apple_pic, colorId, darkAppList);
+                mDarkboxBoxs.add(box);
+                Log.d(TAG, "onClick: applist:" + title + darkAppList.size());
+                listDataSaver.setDataList("darkbox_boxs", mDarkboxBoxs);
                 replaceFragment(new BoxFragment());
             }
         });
@@ -89,7 +102,6 @@ public class AppFragment extends Fragment {
                 mAdapter.notifyDataSetChanged();
             }
         });
-        return view;
     }
 
     private void initApps() {
