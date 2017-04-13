@@ -1,8 +1,11 @@
 package tk.danielgong.darkbox;
 
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.media.Image;
 import android.support.v4.view.MotionEventCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,9 +40,19 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder>  imp
     public static class ViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
         View boxView;
         ImageView boxImage;
+        ImageView deleteImage;
         TextView boxName;
+        TextView deleteName;
         int backgroundColor = 0;
         Switch switchButton;
+
+        public TextView getDeleteName() {
+            return deleteName;
+        }
+
+        public ImageView getDeleteImage() {
+            return deleteImage;
+        }
 
         public ViewHolder(View view) {
             super(view);
@@ -47,6 +60,8 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder>  imp
             boxImage = (ImageView) view.findViewById(R.id.box_image);
             boxName = (TextView) view.findViewById(R.id.box_name);
             switchButton = (Switch) view.findViewById(R.id.switch_button);
+            deleteName = (TextView) view.findViewById(R.id.item_delete_txt);
+            deleteImage = (ImageView) view.findViewById(R.id.item_delete_img);
         }
         @Override
         public void onItemSelected() {
@@ -80,6 +95,7 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder>  imp
         holder.boxImage.setImageResource(box.getImageId());
         holder.boxName.setText(box.getName());
         holder.boxView.setBackgroundColor(box.getBackground());
+        holder.switchButton.setChecked(box.getCheck());
         Log.d(TAG, "onBindViewHolder: " + box.getName());
 
         // Start a drag whenever the handle view it touched
@@ -114,19 +130,14 @@ public class BoxAdapter extends RecyclerView.Adapter<BoxAdapter.ViewHolder>  imp
 
         holder.switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                int position = holder.getAdapterPosition();
-                Box box = mBoxList.get(position);
+            public void onCheckedChanged(CompoundButton buttonView, final boolean isChecked) {
+                final int position = holder.getAdapterPosition();
+                final Box box = mBoxList.get(position);
                 ArrayList<App> ss = box.getApps();
                 for (App s : ss) {
                     Log.d(TAG, "onCheckedChanged: apps " + s.getName());
                 }
                 Log.d(TAG, "onCheckedChanged: size " + ss.size());
-                if(isChecked) {
-                    Toast.makeText(buttonView.getContext(), "onCheckedChanged " + isChecked + box.getName(), Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(buttonView.getContext(), "onCheckedChanged " + isChecked + box.getName(), Toast.LENGTH_SHORT).show();
-                }
             }
         });
     }

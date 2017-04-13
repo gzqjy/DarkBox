@@ -44,30 +44,28 @@
             <!--android:layout_weight="1"-->
             <!--android:text="ToggleButton" />-->
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="180dp"
+    <FrameLayout
+        android:layout_width="100dp"
         android:layout_height="match_parent"
-        android:background="@color/red">
+        android:layout_marginRight="4dp"
+        android:layout_marginBottom="4dp"
+        android:background="#f33213">
+
+        <ImageView
+            android:id="@+id/item_delete_img"
+            android:layout_width="50px"
+            android:layout_height="50px"
+            android:layout_gravity="center"
+            android:background="@mipmap/unlook"
+            android:visibility="invisible" />
 
         <TextView
             android:id="@+id/item_delete_txt"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="10dp"
-            android:text="不再显示"
+            android:text="左滑删除"
+            android:textSize="18sp"
             android:textColor="#ffffff"
-            android:textSize="20dp" />
-
-        <ImageView
-            android:id="@+id/item_delete_img"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="20dp"
-            android:background="@mipmap/unlook"
-            android:visibility="gone" />
-
-    </LinearLayout>
+            android:layout_gravity="center" />
+    </FrameLayout>
 </LinearLayout>
